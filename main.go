@@ -38,13 +38,13 @@ func main() {
 
 				}
 			case err := <-watcher.Errors:
-				log.Println("Error:", err)
+				compiler.LogError(err)
 			}
 		}
 	}()
 	err = watcher.Add(f)
 	if err != nil {
-		log.Fatal(err)
+		compiler.LogError(err)
 	}
 	<-done
 }
