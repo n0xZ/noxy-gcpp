@@ -1,20 +1,18 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"log"
-	"time"
+	"noxy-gcpp/compiler"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-func printFileModificationsDate() {
-	date := time.Now()
-	actualDate := fmt.Sprintf("[%d/%d/%d : %d:%d:%d]", date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), date.Second())
-	fmt.Println(actualDate)
-}
-
 func main() {
+	var f, c string
+	flag.StringVar(&f, "f", "filename", "Should specify the filename")
+	flag.StringVar(&c, "c", "compilerOption", "Should specify the compilerOption (GCC or BCC32)")
+	flag.Parse()
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -23,24 +21,20 @@ func main() {
 	defer watcher.Close()
 
 	done := make(chan bool)
-	// use goroutine to start the watcher
 	go func() {
 		for {
 			select {
 			case event := <-watcher.Events:
-				// monitor only for write events
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					fmt.Println("Modified file:", event.Name)
-					executeCompile()
+					compiler.CompileFile(c, f)
+
 				}
 			case err := <-watcher.Errors:
 				log.Println("Error:", err)
 			}
 		}
 	}()
-	// tuki
-	// provide the file name along with path to be watched
-	err = watcher.Add("main.go")
+	err = watcher.Add(f)
 	if err != nil {
 		log.Fatal(err)
 	}
