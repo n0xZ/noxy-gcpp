@@ -3,31 +3,48 @@ package compiler
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 )
 
-func CompileFile(compiler string, fileName string) {
-	fmt.Println("Compilando ", fileName, "...")
+func logError(err error) {
+	printFileModificationDate()
+	fmt.Println("\033[31m🚨 Ocurrió un error: ")
+	log.Fatal(err.Error())
+	fmt.Print("\033[0m")
+}
+func rewriteOutputDefaultsToTargetDir(targetDir string, cmd *exec.Cmd) {
+	cmd.Dir = targetDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+}
+func CompileFile(compiler string, fileName string, targetDir string) {
 
 	switch compiler {
 	case "gcc":
-
+		printFileModificationDate()
+		fmt.Println("⏳ Compilando en GCC:", fileName, "-o", "")
 		cmd := exec.Command("g++", fileName)
+		rewriteOutputDefaultsToTargetDir(targetDir, cmd)
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logError(err)
 		}
-		fmt.Println("Compilado con éxito.")
+		printFileModificationDate()
+		fmt.Println("\033[32m✅ Compilado con éxito. \033[32m")
 
 	case "bcc32":
-		formattedCommand := fmt.Sprintf("bcc32 %s", fileName)
-		cmd := exec.Command(formattedCommand)
+		printFileModificationDate()
+		fmt.Println("⏳ Compilando en BCC32:", fileName)
+		cmd := exec.Command("bcc32", fileName)
+		rewriteOutputDefaultsToTargetDir(targetDir, cmd)
 		err := cmd.Run()
 		if err != nil {
-			log.Fatal(err)
+			logError(err)
 		}
-		printFileModificationsDate()
-		print("Compilado con éxito.")
+		printFileModificationDate()
+		fmt.Println("\033[32m✅ Compilado con éxito. \033[32m")
 
 	}
 
